@@ -4,6 +4,8 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from .forms import QuizForm, QuestionForm
+from django.forms import inlineformset_factory
 
 
 def index(request):
@@ -120,3 +122,49 @@ def logout(request):
     auth_logout(request)
     return redirect('/')
 
+
+def add_quiz(request):
+    if request.method=="POST":
+        form = QuizForm(data=request.POST)
+        if form.is_valid():
+            quiz = form.save(commit=False)
+            quiz.save()
+            obj = form.instance
+            return render(request, "add_quiz.html", {'obj':obj})
+    else:
+        form=QuizForm()
+    return render(request, "add_quiz.html", {'form':form})
+
+
+def add_question(request):
+    questions = Question.objects.filter().order_by('-id')
+    if request.method=="POST":
+        form = QuestionForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return render(request, "add_question.html")
+    else:
+        form=QuestionForm()
+    return render(request, "add_question.html", {'form':form, 'questions':questions})
+
+
+def delete_question(request, id):
+    question = Question.objects.get(id=id)
+    if request.method == "POST":
+        question.delete()
+        return redirect('/add_question/')
+    return render(request, "delete_question.html", {'question':question})
+
+
+def add_options(request, id):
+    question = Question.objects.get(id=id)
+    QuestionFormSet = inlineformset_factory(Question, Option, fields=('content','correct', 'question'), extra=4)
+    if request.method=="POST":
+        formset = QuestionFormSet(request.POST, instance=question)
+        if formset.is_valid():
+            formset.save()
+            alert = True
+            return render(request, "add_options.html", {'alert':alert})
+    else:
+        formset=QuestionFormSet(instance=question)
+    return render(request, "add_options.html", {'formset':formset, 'question':question})

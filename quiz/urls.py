@@ -9,4 +9,9 @@ urlpatterns = [
     path("signup/", views.signup, name="signup"),
     path("login/", views.login, name="login"),
     path("logout/", views.logout, name="logout"),
+
+    path('add_quiz/', views.add_quiz, name='add_quiz'),
+    path('add_question/', views.add_question, name='add_question'),
+    path('add_options/<int:id>/', views.add_options, name='add_options'),
+    path('delete_question/<int:id>/', views.delete_question, name='delete_question'),
 ]
