@@ -22,7 +22,7 @@ class Question(models.Model):
     def __str__(self):
         return self.content
 
-    def get_answers(self):
+    def get_options(self):
         return self.options.all()
 
 

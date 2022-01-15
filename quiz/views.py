@@ -1,14 +1,79 @@
 from django.shortcuts import render, redirect
-from .models import Quiz
+from .models import Quiz, Question, Option, UserMarks
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
 
 def index(request):
     quiz = Quiz.objects.all()
     param = {'quiz': quiz}
     return render(request, "index.html", param)
+
+
+@login_required(login_url='/login')
+def quiz(request, id):
+    quiz = Quiz.objects.get(id=id)
+    return render(request, "quiz.html", {'quiz':quiz})
+
+
+def quiz_data_view(request, id):
+    quiz = Quiz.objects.get(id=id)
+    questions = []
+    for q in quiz.get_questions():
+        options = []
+        for a in q.get_options():
+            options.append(a.content)
+        questions.append({str(q): options})
+    return JsonResponse({
+        'data': questions,
+        'time': quiz.duration,
+    })
+
+
+def save_quiz_view(request, id):
+    if request.is_ajax():
+        questions = []
+        data = request.POST
+        print("data: ", data)
+        data_ = dict(data.lists())
+
+        data_.pop('csrfmiddlewaretoken')
+
+        for k in data_.keys():
+            print('key: ', k)
+            question = Question.objects.get(content=k)
+            questions.append(question)
+
+        user = request.user
+        quiz = Quiz.objects.get(id=id)
+
+        score = 0
+        marks = []
+        correct_answer = None
+
+        for q in questions:
+            a_selected = request.POST.get(q.content)
+
+            if a_selected != "":
+                question_options = Option.objects.filter(question=q)
+                for a in question_options:
+                    if a_selected == a.content:
+                        if a.correct:
+                            score += 1
+                            correct_answer = a.content
+                    else:
+                        if a.correct:
+                            correct_answer = a.content
+
+                marks.append({str(q): {'correct_answer': correct_answer, 'answered': a_selected}})
+            else:
+                marks.append({str(q): 'not answered'})
+
+        UserMarks.objects.create(quiz=quiz, user=user, score=score)
+
+        return JsonResponse({'passed': True, 'score': score, 'marks': marks})
 
 
 def signup(request):
