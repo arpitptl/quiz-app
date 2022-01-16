@@ -2,31 +2,111 @@
 {% block title %} Quiz {% endblock %}
 {% block css %}
 <style>
-  .attempt {
-    --gradient: linear-gradient(to left top, #c724dd 10%, #aaaaaa 90%) !important;
-  }
+
+  @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700;800&display=swap");
 
   body {
-    background: #111;
+    align-items: center;
+    min-height: 100vh;
+    background: #232427;
   }
 
-  .card {
-    background: #222;
-    border: 1px solid #7a24dd;
-    color: rgba(250, 250, 250, 0.8);
-    margin-bottom: 3rem;
+  body .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 1200px;
   }
 
-  #btn {
-    border: 5px solid;
-    border-image-slice: 1;
-    background: var(--gradient) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    border-image-source: var(--gradient) !important;
-    text-decoration: none;
+  body .container .card {
     position: relative;
-    left: 80px;
+    min-width: 320px;
+    height: 440px;
+    box-shadow: inset 5px 5px 5px rgba(0, 0, 0, 0.2),
+      inset -5px -5px 15px rgba(255, 255, 255, 0.1),
+      5px 5px 15px rgba(0, 0, 0, 0.3), -5px -5px 15px rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    margin: 30px;
+    transition: 0.5s;
+    background-color: #232427
+  }
+
+  body .container .card .box {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    background: #2a2b2f;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transition: 0.5s;
+  }
+
+  body .container .card .box:hover {
+    transform: translateY(-40px);
+  }
+
+  body .container .card .box:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  body .container .card .box .content {
+    padding: 20px;
+    text-align: center;
+  }
+
+  body .container .card .box .content h2 {
+    position: absolute;
+    top: -10px;
+    right: 30px;
+    font-size: 8rem;
+    color: rgba(255, 255, 255, 0.1);
+  }
+
+  body .container .card .box .content h3 {
+    font-size: 2.3rem;
+    font-weight: bold;
+    color: #fff;
+    z-index: 1;
+    transition: 0.5s;
+    margin-bottom: 15px;
+  }
+
+  body .container .card .box .content p {
+    font-size: 1rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.9);
+    z-index: 1;
+    transition: 0.5s;
+  }
+
+  body .container .card .box .content button {
+    position: relative;
+    display: inline-block;
+    padding: 8px 20px;
+    background: #b1acac;
+    border-radius: 5px;
+    text-decoration: none;
+    color: black;
+    margin-top: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    transition: 0.5s;
+  }
+  body .container .card .box .content button:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+    background: black;
+    color: white;
   }
 
   .head1 {
@@ -42,24 +122,14 @@
     font-weight: bold;
   }
 
-  #btn:hover,
-  #btn:focus {
-    background: var(--gradient) !important;
-    -webkit-background-clip: none !important;
-    -webkit-text-fill-color: #fff !important;
-    border: 5px solid #fff !important;
-    box-shadow: #222 1px 0 10px;
-    text-decoration: underline;
-  }
-
-  .logo {
-    position: relative;
-    bottom: 2rem;
-  }
-
   .container-fluid {
     height: 60px;
   }
+
+  .row {
+    justify-content: space-evenly;
+  }
+
 </style>
 {% endblock %}
 {% load static %}
@@ -93,21 +163,22 @@
 
 <!-- cards -->
 <div class="container">
-  <div class="container mx-auto mt-2">
+  <div class="container mx-auto">
     <div class="row">
 
       {% for i in quiz %}
       <div class="col-md-4">
-        <div class="card" style="width: 21rem;">
-          <div class="card-body">
-            <h5 class="card-title" style="text-align: center;">{{i.name}}</h5>
-            <br>
-            <p class="card-text">{{i.description}}</p>
-            <br>
-            <button data-bs-target="#exampleModal" data-bs-toggle="modal" data-time="{{i.duration}}"
-              data-questions="{{i.number_of_questions}}" data-name="{{i.name}}" data-id="{{i.id}}" id="btn"
-              style="justify-content: center;" class="attempt btn mr-2 modal-button"><i class="fas fa-link"></i>Attempt
-              Quiz</button>
+        <div class="card">
+          <div class="box">
+            <div class="content">
+              <h3>{{i.name}}</h3>
+              <p>{{i.description}}</p>
+              <br>
+              <button data-bs-target="#exampleModal" data-bs-toggle="modal" data-time="{{i.duration}}"
+                data-questions="{{i.number_of_questions}}" data-name="{{i.name}}" data-id="{{i.id}}" id="btn"
+                style="justify-content: center;" class="attempt btn mr-2 modal-button"><i class="fas fa-link"></i>Attempt
+                Quiz</button>
+              </div>
           </div>
         </div>
       </div>
