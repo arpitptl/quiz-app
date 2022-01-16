@@ -168,3 +168,16 @@ def add_options(request, id):
     else:
         formset=QuestionFormSet(instance=question)
     return render(request, "add_options.html", {'formset':formset, 'question':question})
+
+
+def results(request):
+    marks = UserMarks.objects.all()
+    return render(request, "results.html", {'marks':marks})
+
+
+def delete_result(request, id):
+    marks = UserMarks.objects.get(id=id)
+    if request.method == "POST":
+        marks.delete()
+        return redirect('/results/')
+    return render(request, "delete_result.html", {'marks':marks})
