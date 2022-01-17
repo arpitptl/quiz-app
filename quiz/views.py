@@ -9,18 +9,113 @@ from django.forms import inlineformset_factory
 
 
 def index(request):
+    """
+    :param request:
+    :return:
+    """
     quiz = Quiz.objects.all()
     param = {'quiz': quiz}
     return render(request, "index.html", param)
 
 
+def signup(request):
+    """
+
+    :param request:
+    :return:
+    """
+    if request.user.is_authenticated:
+        return redirect('/')
+    if request.method == "POST":
+        username = request.POST['username']
+        email = request.POST['email']
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        password = request.POST['password1']
+        confirm_password = request.POST['password2']
+
+        if password != confirm_password:
+            return redirect('/signup')
+
+        user = User.objects.create_user(username, email, password)
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save()
+        return redirect('/login')
+        # return render(request, 'login.html')
+    return render(request, "signup.html")
+
+
+def login(request):
+    """
+
+    :param request:
+    :return:
+    """
+    if request.user.is_authenticated:
+        return redirect('/')
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            auth_login(request, user)
+            return redirect("/")
+        else:
+            return render(request, "login.html")
+    return render(request, "login.html")
+
+
+def logout(request):
+    """
+
+    :param request:
+    :return:
+    """
+    auth_logout(request)
+    return redirect('/')
+
+
 @login_required(login_url='/login')
 def quiz(request, id):
+    """
+    :param request:
+    :param id:
+    :return:
+    """
     quiz = Quiz.objects.get(id=id)
     return render(request, "quiz.html", {'quiz':quiz})
 
 
+def add_quiz(request):
+    """
+
+    :param request:
+    :return:
+    """
+    quizzes = Quiz.objects.filter().order_by('-id')
+
+    if request.method == "POST":
+        form = QuizForm(data=request.POST)
+        if form.is_valid():
+            quiz = form.save(commit=False)
+            quiz.save()
+            obj = form.instance
+            return render(request, "add_quiz.html", {'form': form, 'quizzes': quizzes})
+    else:
+        form = QuizForm()
+    return render(request, "add_quiz.html", {'form': form, 'quizzes': quizzes})
+
+
 def quiz_data_view(request, id):
+    """
+
+    :param request:
+    :param id:
+    :return:
+    """
     quiz = Quiz.objects.get(id=id)
     questions = []
     for q in quiz.get_questions():
@@ -35,16 +130,20 @@ def quiz_data_view(request, id):
 
 
 def save_quiz_view(request, id):
+    """
+
+    :param request:
+    :param id:
+    :return:
+    """
     if request.is_ajax():
         questions = []
         data = request.POST
-        print("data: ", data)
         data_ = dict(data.lists())
 
         data_.pop('csrfmiddlewaretoken')
 
         for k in data_.keys():
-            print('key: ', k)
             question = Question.objects.get(content=k)
             questions.append(question)
 
@@ -78,71 +177,28 @@ def save_quiz_view(request, id):
         return JsonResponse({'passed': True, 'score': score, 'marks': marks})
 
 
-def signup(request):
-    if request.user.is_authenticated:
-        return redirect('/')
+def delete_quiz(request, id):
+    """
+
+    :param request:
+    :param id:
+    :return:
+    """
+    quiz = Quiz.objects.get(id=id)
     if request.method == "POST":
-        username = request.POST['username']
-        email = request.POST['email']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        password = request.POST['password1']
-        confirm_password = request.POST['password2']
-
-        if password != confirm_password:
-            return redirect('/signup')
-
-        user = User.objects.create_user(username, email, password)
-        user.first_name = first_name
-        user.last_name = last_name
-        user.save()
-        return redirect('/login')
-        # return render(request, 'login.html')
-    return render(request, "signup.html")
-
-
-def login(request):
-    if request.user.is_authenticated:
-        return redirect('/')
-    if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['password']
-
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            auth_login(request, user)
-            return redirect("/")
-        else:
-            return render(request, "login.html")
-    return render(request, "login.html")
-
-
-def logout(request):
-    auth_logout(request)
-    return redirect('/')
-
-
-def add_quiz(request):
-    quizzes = Quiz.objects.filter().order_by('-id')
-
-    if request.method=="POST":
-        form = QuizForm(data=request.POST)
-        if form.is_valid():
-            quiz = form.save(commit=False)
-            quiz.save()
-            print("quiz: ", quiz)
-            obj = form.instance
-            print("obj: ", obj)
-            return render(request, "add_quiz.html", {'form':form, 'quizzes':quizzes})
-    else:
-        form=QuizForm()
-    return render(request, "add_quiz.html", {'form':form, 'quizzes':quizzes})
+        quiz.delete()
+        return redirect('/add_quiz/')
+    return render(request, "delete_quiz.html", {'quiz': quiz})
 
 
 def add_question(request):
+    """
+
+    :param request:
+    :return:
+    """
     questions = Question.objects.filter().order_by('-id')
-    if request.method=="POST":
+    if request.method == "POST":
         form = QuestionForm(request.POST)
         if form.is_valid():
             form.save()
@@ -153,6 +209,12 @@ def add_question(request):
 
 
 def delete_question(request, id):
+    """
+
+    :param request:
+    :param id:
+    :return:
+    """
     question = Question.objects.get(id=id)
     if request.method == "POST":
         question.delete()
@@ -160,18 +222,16 @@ def delete_question(request, id):
     return render(request, "delete_question.html", {'question':question})
 
 
-def delete_quiz(request, id):
-    quiz = Quiz.objects.get(id=id)
-    if request.method == "POST":
-        quiz.delete()
-        return redirect('/add_quiz/')
-    return render(request, "delete_quiz.html", {'quiz':quiz})
-
-
 def add_options(request, id):
+    """
+
+    :param request:
+    :param id:
+    :return:
+    """
     question = Question.objects.get(id=id)
     QuestionFormSet = inlineformset_factory(Question, Option, fields=('content','correct', 'question'), extra=4)
-    if request.method=="POST":
+    if request.method == "POST":
         formset = QuestionFormSet(request.POST, instance=question)
         if formset.is_valid():
             formset.save()
@@ -183,11 +243,22 @@ def add_options(request, id):
 
 
 def results(request):
+    """
+
+    :param request:
+    :return:
+    """
     marks = UserMarks.objects.all()
     return render(request, "results.html", {'marks':marks})
 
 
 def delete_result(request, id):
+    """
+
+    :param request:
+    :param id:
+    :return:
+    """
     marks = UserMarks.objects.get(id=id)
     if request.method == "POST":
         marks.delete()
